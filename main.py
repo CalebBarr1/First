@@ -1,5 +1,8 @@
 import mysql.connector
 
+
+
+
 mydb = mysql.connector.connect(
     host="localhost",
     user="root",
@@ -17,6 +20,7 @@ def create_account():
         else:
             print("[ERROR] Invalid Email address. Please enter a valid Email. \n")
             continue
+
 
         password = input("Please enter your password. (This is an experimental program. Do not enter serious passwords)")
         password2 = input("Please repeat your password. ")
@@ -111,6 +115,8 @@ def logged_in(user_id):
         print("2. Deposit")
         print("3. Check Balance")
         print("4. Logout")
+        print("5. Close Account")
+        print("6. Modify Account")
         choice = input("Enter choice: ")
 
         # Withdrawing money
@@ -137,13 +143,63 @@ def logged_in(user_id):
             set_balance(user_id, amount + get_balance(user_id))
             print("You successfully updated your balance. You now have a balance of ${:.2f}".format(get_balance(user_id)))
 
+
+
+
         # checking balance
         elif choice == "3":
             print("You currently have a balance of ${:.2f}".format(get_balance(user_id)))
 
+
+
+
         # going back to the main menu.
         elif choice == "4":
             print("Logging out...")
+            break
+        # deleting / closing account.
+        elif choice == "5":
+            #show prompt to confirm
+            confirm_choice = input("Are you sure you want to close your account? Please remember this action is irreversable: ")
+            if(confirm_choice.lower() == "yes"):
+                # deletes account
+                cursor = mydb.cursor()
+                print(f"Your user ID: {user_id}")
+                # Delete the account from the database
+                cursor.execute("DELETE FROM users WHERE id = %s", (user_id,))
+                mydb.commit()
+                cursor.close()
+                break
+            if (confirm_choice.lower() == "no"):
+                print("You have chosen to not delete your account.")
+                break
+            else:
+                print("[ERROR] Invalid choice, returning to account.")
+                break
+        elif choice == "6":
+            cursor = mydb.cursor()
+            new_email = input("Enter your new email: ")
+            if "@" in new_email and "." in new_email:
+                # Update the email in the database
+                cursor.execute("UPDATE users SET email = %s WHERE id = %s", (new_email, user_id))
+                mydb.commit()
+                print("Email updated successfully.")
+            else:
+                print("Invalid email format.")
+                continue
+            password = input("Please enter your new password. (This is an experimental program. Do not enter serious passwords)")
+            password2 = input("Please repeat your new password. ")
+            if password == password2:
+                if len(password) > 5:
+                    pass
+                else:
+                    print("[ERROR] The new password needs to have a minimum of 6 characters. ")
+                    continue
+            # Update the email in the database
+            cursor.execute("UPDATE users SET password = %s WHERE id = %s", (password2, user_id))
+            mydb.commit()
+            print("Password updated successfully.")
+            cursor.close()
             break
         else:
             print("[ERROR] Invalid choice")
@@ -157,10 +213,12 @@ def main():
     print("3. Exit program")
     choice = input("Enter choice: ")
 
+
     # Initial Selection (infinitely continues unless 1 or 2 is entered.)
     if choice == "1":
         user_id = create_account()
         logged_in(user_id)
+
 
     elif choice == "2":
         user_id = login()
@@ -173,6 +231,10 @@ def main():
         print("[ERROR] Invalid option. ")
 
 
+
 if __name__ == "__main__":
     while True:
         main()
+
+
+
